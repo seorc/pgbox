@@ -1,0 +1,18 @@
+---
+- hosts: all
+  tasks:
+    - name: generate es_MX locale
+      shell: locale-gen es_MX.UTF-8
+    - name: ensure postgres is installed
+      apt: pkg=postgresql state=latest
+      notify:
+        - restart postgresql
+    - name: create default db user
+      shell: createuser pgdev -s
+      sudo: yes
+      sudo_user: postgres
+    - name: ensure htop is installed
+      apt: pkg=htop state=latest
+  handlers:
+    - name: restart postgresql
+      service: name=postgresql state=restarted
