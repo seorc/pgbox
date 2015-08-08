@@ -1,0 +1,5 @@
+---
+postgresql_users:
+  - name: pgdev
+    password: topsecret
+    flags: CREATEDB

@@ -1,0 +1,61 @@
+---
+  - name: generate locales
+    locale_gen:
+      name: "{{item}}"
+      state: present
+    with_items:
+      - es_MX.UTF-8
+      - en_US.UTF-8
+
+  - name: update the apt cache
+    apt:
+      update_cache: yes
+      cache_valid_time: 3600
+
+  - name: ensure some utilities are installed
+    apt:
+      name: "{{item}}"
+      state: latest
+    with_items:
+      - htop
+      - python-dev
+      - python-pip
+      - libpq-dev
+
+  - name: ensure psycopg2 is installed
+    pip:
+      name: psycopg2
+      state: latest
+
+  - name: ensure postgres is installed
+    apt:
+      name: postgresql
+      state: latest
+    notify:
+      - restart postgresql
+
+  - name: ensure postgresql is enabled
+    service:
+      name: postgresql
+      state: started
+      enabled: yes
+
+  - name: ensure db users are created
+    sudo_user: postgres
+    postgresql_user:
+      name: "{{item.name}}"
+      state: present
+      encrypted: true
+      password: "{{item.password}}"
+      role_attr_flags: "{{item.flags}}"
+    with_items: postgresql_users
+
+  - name: ensure other provisioners are removed
+    apt:
+      name: "{{item}}"
+      state: absent
+    with_items:
+      - puppet
+      - puppet-common
+      - chef
+      - chef-zero
